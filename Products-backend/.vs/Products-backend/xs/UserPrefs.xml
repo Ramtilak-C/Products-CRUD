@@ -1,0 +1,32 @@
+﻿<Properties StartupConfiguration="{E3EAE80F-0782-4EDE-A3D7-64371C683360}|https">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Products-backend/Program.cs">
+    <Files>
+      <File FileName="Products-backend/Models/Product.cs" Line="10" Column="37" />
+      <File FileName="Products-backend/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.min.css.map" />
+      <File FileName="Products-backend/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css.map" />
+      <File FileName="Products-backend/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.min.js.map" Line="1" Column="13900" />
+      <File FileName="Products-backend/Models/ProductContext.cs" Line="4" Column="34" />
+      <File FileName="Products-backend/appsettings.json" Line="5" Column="40" />
+      <File FileName="Products-backend/Program.cs" Line="32" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="Products-backend" expanded="True">
+            <Node name="Products-backend" expanded="True" selected="True">
+              <Node name="Models" expanded="True" />
+              <Node name="appsettings.json" expanded="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.ItemProperties.Products-backend FirstBuild="True" PreferredExecutionTarget="/Applications/Google Chrome.app" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+</Properties>
