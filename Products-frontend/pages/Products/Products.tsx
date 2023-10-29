@@ -7,23 +7,29 @@ import Col from "react-bootstrap/Col";
 import { Container, Form } from "react-bootstrap";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
+import Pagination from "./Pagination";
 import "react-toastify/dist/ReactToastify.css";
 
 const Products = () => {
   const [validated, setValidated] = useState(false);
+  const [validatedEdit, setValidatedEdit] = useState(false);
   const [show, setShow] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
   const handleAddClose = () => setShowAdd(false);
   const handleAddShow = () => setShowAdd(true);
 
+  const [id, setId] = useState("");
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [price, setPrice] = useState("");
 
   const [editId, setEditId] = useState("");
+  const [editProductId, setEditProductId] = useState("");
   const [editName, setEditName] = useState("");
   const [editBrand, setEditBrand] = useState("");
   const [editPrice, setEditPrice] = useState("");
@@ -49,6 +55,7 @@ const Products = () => {
         setEditName(result.data.name);
         setEditBrand(result.data.brand);
         setEditPrice(result.data.price);
+        setEditProductId(result.data.productID);
         setEditId(id);
       })
       .catch((error) => {
@@ -72,41 +79,56 @@ const Products = () => {
     }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = (event) => {
     const url = `http://localhost:5011/api/Product/${editId}`;
     const data = {
       id: editId,
+      productId: editProductId,
       name: editName,
       brand: editBrand,
       price: editPrice,
     };
+    const form = event.currentTarget;
+    event.preventDefault();
+    event.stopPropagation();
+    if (form.checkValidity() === false) {
+      setValidatedEdit(true);
+    } else {
+      axios
+        .put(url, data)
+        .then((result) => {
+          handleClose();
+          getProductsData();
+          clear();
+          toast.success("Product has been updated");
+        })
+        .catch((error) => {
+          toast.error(error);
+        });
+    }
+  };
 
-    axios
-      .put(url, data)
-      .then((result) => {
-        handleClose();
-        getProductsData();
-        clear();
-        toast.success("Product has been updated");
-      })
-      .catch((error) => {
-        toast.error(error);
-      });
+  const checkAlreadyExists = () => {
+    return productsData.some((product) => product.productID === id);
   };
 
   const handleSave = (event) => {
     const url = "http://localhost:5011/api/Product";
     const data = {
+      productId: id,
       name: name,
       brand: brand,
       price: price,
     };
 
     const form = event.currentTarget;
+    event.preventDefault();
+    event.stopPropagation();
     if (form.checkValidity() === false) {
-      event.preventDefault();
-      event.stopPropagation();
       setValidated(true);
+    }
+    if (checkAlreadyExists()) {
+      toast.error("Product already exists");
     } else {
       axios
         .post(url, data)
@@ -123,6 +145,7 @@ const Products = () => {
   };
 
   const clear = () => {
+    setId("");
     setName("");
     setBrand("");
     setPrice("");
@@ -132,16 +155,31 @@ const Products = () => {
     setEditPrice("");
   };
 
-  const filterProducts = () => {
+  const filterOnSearch = () => {
     return productsData.filter((product) => {
       const searchTerm = search.toLowerCase();
       return (
-        product.id.toString().toLowerCase().includes(searchTerm) ||
+        product.productID.toLowerCase().includes(searchTerm) ||
         product.name.toLowerCase().includes(searchTerm) ||
         product.brand.toLowerCase().includes(searchTerm) ||
         product.price.toString().toLowerCase().includes(searchTerm)
       );
     });
+  };
+
+  const filterProducts = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filterOnSearch().slice(startIndex, endIndex);
+  };
+
+  const filterProductsLength = () => {
+    const filteredData = filterOnSearch();
+    return filteredData.length;
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
   };
 
   useEffect(() => {
@@ -185,7 +223,7 @@ const Products = () => {
             {filterProducts().map((product) => {
               return (
                 <tr key={product.id}>
-                  <td>{product.id}</td>
+                  <td>{product.productID}</td>
                   <td>{product.name}</td>
                   <td>{product.brand}</td>
                   <td>{product.price}</td>
@@ -209,15 +247,30 @@ const Products = () => {
             })}
           </tbody>
         </Table>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(filterProductsLength() / itemsPerPage)}
+          onPageChange={handlePageChange}
+        />
       </Container>
-      <Modal show={showAdd} onHide={handleAddClose}>
+      <Modal show={showAdd} onHide={handleAddClose} size="lg">
         <Form noValidate validated={validated} onSubmit={handleSave}>
           <Modal.Header closeButton>
             <Modal.Title>Add product</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Row className="mb-3">
-              <Form.Group as={Col} md="4" controlId="validationCustomName">
+            <Row className="mb-4">
+              <Form.Group as={Col} md="3" controlId="validationCustomId">
+                <Form.Label>Product ID</Form.Label>
+                <Form.Control
+                  required
+                  type="text"
+                  placeholder="Product ID"
+                  value={id}
+                  onChange={(e) => setId(e.target.value)}
+                />
+              </Form.Group>
+              <Form.Group as={Col} md="3" controlId="validationCustomName">
                 <Form.Label>Product name</Form.Label>
                 <Form.Control
                   required
@@ -227,7 +280,7 @@ const Products = () => {
                   onChange={(e) => setName(e.target.value)}
                 />
               </Form.Group>
-              <Form.Group as={Col} md="4" controlId="validationCustomBrand">
+              <Form.Group as={Col} md="3" controlId="validationCustomBrand">
                 <Form.Label>Brand</Form.Label>
                 <Form.Control
                   required
@@ -237,7 +290,7 @@ const Products = () => {
                   onChange={(e) => setBrand(e.target.value)}
                 />
               </Form.Group>
-              <Form.Group as={Col} md="4" controlId="validationCustomPrice">
+              <Form.Group as={Col} md="3" controlId="validationCustomPrice">
                 <Form.Label>Price</Form.Label>
                 <Form.Control
                   required
@@ -259,49 +312,69 @@ const Products = () => {
           </Modal.Footer>
         </Form>
       </Modal>
-      <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Modify product</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Row>
-            <Col>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter Name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-              />
-            </Col>
-            <Col>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter Brand"
-                value={editBrand}
-                onChange={(e) => setEditBrand(e.target.value)}
-              />
-            </Col>
-            <Col>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter Price"
-                value={editPrice}
-                onChange={(e) => setEditPrice(e.target.value)}
-              />
-            </Col>
-          </Row>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleUpdate}>
-            Save Changes
-          </Button>
-        </Modal.Footer>
+      <Modal show={show} onHide={handleClose} size="lg">
+        <Form noValidate validated={validatedEdit} onSubmit={handleUpdate}>
+          <Modal.Header closeButton>
+            <Modal.Title>Modify product</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Row className="mb-4">
+              <Form.Group
+                as={Col}
+                md="3"
+                controlId="validationCustomEditProductId"
+              >
+                <Form.Label>Product ID</Form.Label>
+                <Form.Control
+                  required
+                  disabled
+                  type="text"
+                  placeholder="Product ID"
+                  value={editProductId}
+                  onChange={(e) => setEditProductId(e.target.value)}
+                />
+              </Form.Group>
+              <Form.Group as={Col} md="3" controlId="validationCustomEditName">
+                <Form.Label>Product name</Form.Label>
+                <Form.Control
+                  required
+                  type="text"
+                  placeholder="Product name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                />
+              </Form.Group>
+              <Form.Group as={Col} md="3" controlId="validationCustomEditBrand">
+                <Form.Label>Brand</Form.Label>
+                <Form.Control
+                  required
+                  type="text"
+                  placeholder="Product brand"
+                  value={editBrand}
+                  onChange={(e) => setEditBrand(e.target.value)}
+                />
+              </Form.Group>
+              <Form.Group as={Col} md="3" controlId="validationCustomEditPrice">
+                <Form.Label>Price</Form.Label>
+                <Form.Control
+                  required
+                  type="text"
+                  placeholder="Product price"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                />
+              </Form.Group>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleClose}>
+              Close
+            </Button>
+            <Button variant="primary" type="submit">
+              Save changes
+            </Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
     </Fragment>
   );
